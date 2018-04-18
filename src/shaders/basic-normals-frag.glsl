@@ -50,6 +50,6 @@ void main() {
 	vec3 col = mix(vec3(1,0,0), vec3(0,0,1), d);
 	
 	out_Col = vec4(bump.xyz, 1.0);
-	out_Col = vec4(vec3(d),1.0);
+	out_Col = vec4(col,1.0);
 	//out_Col = vec4(col,1.0);
 }

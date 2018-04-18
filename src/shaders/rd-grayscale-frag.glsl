@@ -31,25 +31,6 @@ void main() {
 	gb1 = texelFetch(u_input, ivec2(gl_FragCoord.xy), 0);
 	float c = (gb1.x - gb1.y);
 
-    float s11 = c;
-    vec2 s01xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.xy, 0).xy;
-    vec2 s21xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.zy, 0).xy;
-    vec2 s10xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.yx, 0).xy;
-    vec2 s12xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.yz, 0).xy;
-	float s01 = s01xy.x - s01xy.y;
-	float s21 = s21xy.x - s21xy.y;
-	float s10 = s10xy.x - s10xy.y;
-	float s12 = s12xy.x - s12xy.y;
-    vec3 va = normalize(vec3(size.xy,s21-s01));
-    vec3 vb = normalize(vec3(size.yx,s12-s10));
-    vec4 bump = vec4( cross(va,vb), s11 );
-	
-	float d = dot(bump.xyz,normalize(vec3(1,-1,0.5)));
-	d = clamp(d,0.0,1.0);
-
-	vec3 col = mix(vec3(1,0,0), vec3(0,0,1), d);
-	
-	out_Col = vec4(bump.xyz, 1.0);
-	out_Col = vec4(col,1.0);
+	out_Col = vec4(vec3(c),1.0);
 	//out_Col = vec4(col,1.0);
 }

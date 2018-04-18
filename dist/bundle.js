@@ -3667,6 +3667,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 // Define an object with application parameters and button callbacks
 const controls = {
     shading: 'Grayscale',
+    simulationSpeed: 3,
 };
 let postProcessActive = [true];
 let square;
@@ -3713,6 +3714,7 @@ function main() {
     // Add controls to the gui
     const gui = new __WEBPACK_IMPORTED_MODULE_2_dat_gui__["GUI"]();
     const shading = gui.add(controls, 'shading', ['Grayscale', 'Normals']);
+    const simSpeed = gui.add(controls, 'simulationSpeed', 0, 5);
     // get canvas and webgl context
     const canvas = document.getElementById('canvas');
     const gl = canvas.getContext('webgl2');
@@ -3768,7 +3770,7 @@ function main() {
         }
         // render from gbuffers into 32-bit color buffer
         //renderer.renderFromGBuffer(camera);
-        for (let i = 0; i < numIters; i++) {
+        for (let i = 0; i < controls.simulationSpeed; i++) {
             renderer.updateMouseCount(mouseCount--);
             renderer.renderFromPrev(camera);
             renderer.renderToPrev(camera);
@@ -12871,13 +12873,13 @@ module.exports = "#version 300 es\nprecision highp float;\n\nin vec2 fs_UV;\nout
 /* 40 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\n#define NUM_ROWS 200.0\n#define NUM_COLS 400.0\n\nin vec2 fs_UV;\nout vec4 out_Col;\n\nuniform sampler2D u_frame;\nuniform sampler2D u_input;\nuniform float u_Time;\n\n\n\nvec3 noise_gen3D(vec3 pos) {\n    float x = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(12.9898, 78.233, 78.156))) * 43758.5453);\n    float y = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(2.332, 14.5512, 170.112))) * 78458.1093);\n    float z = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(400.12, 90.5467, 10.222))) * 90458.7764);\n    return 2.0 * (vec3(x,y,z) - 0.5);\n}\n\n// Interpolation between color and greyscale over time on left half of screen\nvoid main() {\n\n\tvec2 size = vec2(1.5,0.0);\n \tivec3 off = ivec3(-1,0,1);\n\n\tvec4 gb1 = texture(u_input, fs_UV);\n\n\tgb1 = texelFetch(u_input, ivec2(gl_FragCoord.xy), 0);\n\tfloat c = (gb1.x - gb1.y);\n\n    float s11 = c;\n    vec2 s01xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.xy, 0).xy;\n    vec2 s21xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.zy, 0).xy;\n    vec2 s10xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.yx, 0).xy;\n    vec2 s12xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.yz, 0).xy;\n\tfloat s01 = s01xy.x - s01xy.y;\n\tfloat s21 = s21xy.x - s21xy.y;\n\tfloat s10 = s10xy.x - s10xy.y;\n\tfloat s12 = s12xy.x - s12xy.y;\n    vec3 va = normalize(vec3(size.xy,s21-s01));\n    vec3 vb = normalize(vec3(size.yx,s12-s10));\n    vec4 bump = vec4( cross(va,vb), s11 );\n\t\n\tfloat d = dot(bump.xyz,normalize(vec3(1,-1,0.5)));\n\td = clamp(d,0.0,1.0);\n\n\tvec3 col = mix(vec3(1,0,0), vec3(0,0,1), d);\n\t\n\tout_Col = vec4(bump.xyz, 1.0);\n\tout_Col = vec4(col,1.0);\n\t//out_Col = vec4(col,1.0);\n}\n"
+module.exports = "#version 300 es\nprecision highp float;\n\n#define NUM_ROWS 200.0\n#define NUM_COLS 400.0\n\nin vec2 fs_UV;\nout vec4 out_Col;\n\nuniform sampler2D u_frame;\nuniform sampler2D u_input;\nuniform float u_Time;\n\n\n\nvec3 noise_gen3D(vec3 pos) {\n    float x = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(12.9898, 78.233, 78.156))) * 43758.5453);\n    float y = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(2.332, 14.5512, 170.112))) * 78458.1093);\n    float z = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(400.12, 90.5467, 10.222))) * 90458.7764);\n    return 2.0 * (vec3(x,y,z) - 0.5);\n}\n\n// Interpolation between color and greyscale over time on left half of screen\nvoid main() {\n\n\tvec2 size = vec2(1.5,0.0);\n \tivec3 off = ivec3(-1,0,1);\n\n\tvec4 gb1 = texture(u_input, fs_UV);\n\n\tgb1 = texelFetch(u_input, ivec2(gl_FragCoord.xy), 0);\n\tfloat c = (gb1.x - gb1.y);\n\n\tout_Col = vec4(vec3(c),1.0);\n\t//out_Col = vec4(col,1.0);\n}\n"
 
 /***/ }),
 /* 41 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\nprecision highp float;\n\n#define NUM_ROWS 200.0\n#define NUM_COLS 400.0\n\nin vec2 fs_UV;\nout vec4 out_Col;\n\nuniform sampler2D u_frame;\nuniform sampler2D u_input;\nuniform float u_Time;\n\n\n\nvec3 noise_gen3D(vec3 pos) {\n    float x = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(12.9898, 78.233, 78.156))) * 43758.5453);\n    float y = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(2.332, 14.5512, 170.112))) * 78458.1093);\n    float z = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(400.12, 90.5467, 10.222))) * 90458.7764);\n    return 2.0 * (vec3(x,y,z) - 0.5);\n}\n\n// Interpolation between color and greyscale over time on left half of screen\nvoid main() {\n\n\tvec2 size = vec2(2.0,0.0);\n \tivec3 off = ivec3(-1,0,1);\n\n\tvec4 gb1 = texture(u_input, fs_UV);\n\n\tgb1 = texelFetch(u_input, ivec2(gl_FragCoord.xy), 0);\n\tfloat c = (gb1.x - gb1.y);\n\n    float s11 = c;\n    vec2 s01xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.xy, 0).xy;\n    vec2 s21xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.zy, 0).xy;\n    vec2 s10xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.yx, 0).xy;\n    vec2 s12xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.yz, 0).xy;\n\tfloat s01 = s01xy.x - s01xy.y;\n\tfloat s21 = s21xy.x - s21xy.y;\n\tfloat s10 = s10xy.x - s10xy.y;\n\tfloat s12 = s12xy.x - s12xy.y;\n    vec3 va = normalize(vec3(size.xy,s21-s01));\n    vec3 vb = normalize(vec3(size.yx,s12-s10));\n    vec4 bump = vec4( cross(va,vb), s11 );\n\t\n\tfloat d = dot(bump.xyz,normalize(vec3(1,-1,0.5)));\n\td = clamp(d,0.0,1.0);\n\n\tvec3 col = mix(vec3(1,0,0), vec3(0,0,1), d);\n\t\n\tout_Col = vec4(bump.xyz, 1.0);\n\tout_Col = vec4(vec3(d),1.0);\n\t//out_Col = vec4(col,1.0);\n}\n"
+module.exports = "#version 300 es\nprecision highp float;\n\n#define NUM_ROWS 200.0\n#define NUM_COLS 400.0\n\nin vec2 fs_UV;\nout vec4 out_Col;\n\nuniform sampler2D u_frame;\nuniform sampler2D u_input;\nuniform float u_Time;\n\n\n\nvec3 noise_gen3D(vec3 pos) {\n    float x = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(12.9898, 78.233, 78.156))) * 43758.5453);\n    float y = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(2.332, 14.5512, 170.112))) * 78458.1093);\n    float z = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(400.12, 90.5467, 10.222))) * 90458.7764);\n    return 2.0 * (vec3(x,y,z) - 0.5);\n}\n\n// Interpolation between color and greyscale over time on left half of screen\nvoid main() {\n\n\tvec2 size = vec2(2.0,0.0);\n \tivec3 off = ivec3(-1,0,1);\n\n\tvec4 gb1 = texture(u_input, fs_UV);\n\n\tgb1 = texelFetch(u_input, ivec2(gl_FragCoord.xy), 0);\n\tfloat c = (gb1.x - gb1.y);\n\n    float s11 = c;\n    vec2 s01xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.xy, 0).xy;\n    vec2 s21xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.zy, 0).xy;\n    vec2 s10xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.yx, 0).xy;\n    vec2 s12xy = texelFetch(u_input, ivec2(gl_FragCoord.xy) + off.yz, 0).xy;\n\tfloat s01 = s01xy.x - s01xy.y;\n\tfloat s21 = s21xy.x - s21xy.y;\n\tfloat s10 = s10xy.x - s10xy.y;\n\tfloat s12 = s12xy.x - s12xy.y;\n    vec3 va = normalize(vec3(size.xy,s21-s01));\n    vec3 vb = normalize(vec3(size.yx,s12-s10));\n    vec4 bump = vec4( cross(va,vb), s11 );\n\t\n\tfloat d = dot(bump.xyz,normalize(vec3(1,-1,0.5)));\n\td = clamp(d,0.0,1.0);\n\n\tvec3 col = mix(vec3(1,0,0), vec3(0,0,1), d);\n\t\n\tout_Col = vec4(bump.xyz, 1.0);\n\tout_Col = vec4(col,1.0);\n\t//out_Col = vec4(col,1.0);\n}\n"
 
 /***/ }),
 /* 42 */

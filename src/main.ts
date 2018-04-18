@@ -13,6 +13,7 @@ import Texture from './rendering/gl/Texture';
 // Define an object with application parameters and button callbacks
 const controls = {
   shading : 'Grayscale',
+  simulationSpeed : 3,
 };
 
 let postProcessActive : boolean[] = [true];
@@ -79,6 +80,7 @@ function main() {
     // Add controls to the gui
     const gui = new DAT.GUI();
     const shading = gui.add(controls, 'shading', ['Grayscale', 'Normals']);
+    const simSpeed = gui.add(controls, 'simulationSpeed', 0, 5);
 
     
   // get canvas and webgl context
@@ -120,6 +122,8 @@ function main() {
       }
   });
 
+  
+
   function tick() {
     camera.update();
     stats.begin();
@@ -147,7 +151,7 @@ function main() {
     }
     // render from gbuffers into 32-bit color buffer
     //renderer.renderFromGBuffer(camera);
-    for(let i = 0; i < numIters; i++) {
+    for(let i = 0; i < controls.simulationSpeed; i++) {
       renderer.updateMouseCount(mouseCount--);
       renderer.renderFromPrev(camera);
       renderer.renderToPrev(camera);
