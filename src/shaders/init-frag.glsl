@@ -11,6 +11,8 @@ in vec4 ss_Nor;
 
 uniform sampler2D u_gb0;
 uniform float u_Time;
+uniform int u_Width;
+uniform int u_Height;
 
 out vec4 fragColor; // The data in the ith index of this array of outputs
                        // is passed to the ith index of OpenGLRenderer's
@@ -29,6 +31,9 @@ vec3 noise_gen3D(vec3 pos) {
 }
 
 void main() {
+
+
+	ivec2 frag_coord = ivec2(gl_FragCoord.xy);
     // TODO: pass proper data into gbuffers
     // Presently, the provided shader passes "nothing" to the first
     // two gbuffers and basic color to the third.
@@ -44,13 +49,30 @@ void main() {
     // }l
 
 	vec4 gb0 = texture(u_gb0, fs_UV);
-    if(u_Time < 1.0) {
-        gb0 = vec4(1.0,0.0,0.0,1.0);
+    // if(u_Time < 1.0) {
+    //     gb0 = vec4(1.0,0.0,0.0,1.0);
+    // }
+
+    gb0 = vec4(1.0,0.0,0.0,1.0);
+
+    if(fs_UV.x > (0.5 - 0.03 * float(u_Height)/float(u_Width)) && fs_UV.x < (0.5  + 0.03 * float(u_Height)/float(u_Width)) 
+        && fs_UV.y > 0.47 && fs_UV.y < 0.53 ){
+        gb0[1] = 1.0;
     }
-    vec3 rgb = gb0.xyz + vec3(0.05,0.05,0.05);
+
+    vec2 idx = vec2(floor(fs_UV.x * 10.0)/10.0, floor(fs_UV.y * 10.0)/10.0);
+
+    // if(distance(fs_UV,idx) < 0.04) {
+    //     gb0[1] = 1.0;
+    // }
+
+    if(int(gl_FragCoord.x) == 0 || int(gl_FragCoord.y) == 0 || int(frag_coord.x) > (u_Width - 3) || int(frag_coord.y) > (u_Height - 3)) {
+		gb0[1] = 0.0;
+	}
+    //vec3 rgb = gb0.xyz + vec3(0.05,0.05,0.05);
     // if(rgb.x > 1.0) {
     //     rgb = vec3(0.0);
     // }
-
-    fragColor = vec4(col, 1.0);
+    //gb0 = vec4(float(u_Height)/float(u_Width), 0.0,0.0,1.0);
+    fragColor = vec4(gb0.xyz, 1.0);
 }

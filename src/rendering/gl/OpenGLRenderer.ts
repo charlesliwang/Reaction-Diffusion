@@ -1,4 +1,4 @@
-import {mat4, vec4, vec3} from 'gl-matrix';
+import {mat4, vec4, vec3, vec2} from 'gl-matrix';
 import Drawable from './Drawable';
 import Camera from '../../Camera';
 import {gl} from '../../globals';
@@ -9,6 +9,7 @@ import Square from '../../geometry/Square';
 
 class OpenGLRenderer {
   postProcessesActive: boolean[] = [];
+  shadingIdx: number = 0;
 
   gBuffer: WebGLFramebuffer; // framebuffer for deferred rendering
 
@@ -50,8 +51,8 @@ class OpenGLRenderer {
       new Shader(gl.FRAGMENT_SHADER, require('../../shaders/compute-frag.glsl'))
     );
 
-    echoShader :  PostProcess = new PostProcess(
-      new Shader(gl.FRAGMENT_SHADER, require('../../shaders/compute-frag.glsl'))
+  echoShader :  PostProcess = new PostProcess(
+      new Shader(gl.FRAGMENT_SHADER, require('../../shaders/echo-frag.glsl'))
     );
     
 
@@ -86,6 +87,8 @@ class OpenGLRenderer {
     // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/passthroughPost-frag.glsl'))));
     
     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/rd-grayscale-frag.glsl'))));
+    this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/basic-normals-frag.glsl'))));
+    
     // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/vaporwave-frag.glsl'))));
     // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/paint-frag.glsl'))));
     // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/pointalism-frag.glsl'))));
@@ -120,6 +123,9 @@ class OpenGLRenderer {
     console.log(width, height);
     this.canvas.width = width;
     this.canvas.height = height;
+
+    this.computeShader.setHeight(height);
+    this.computeShader.setWidth(width);
 
     // --- GBUFFER CREATION START ---
     // refresh the gbuffers
@@ -286,6 +292,15 @@ class OpenGLRenderer {
     for (let pass of this.post8Passes) pass.setTime(currentTime);
     for (let pass of this.post32Passes) pass.setTime(currentTime);
     this.currentTime = currentTime;
+  }
+
+  updateMouse(x: number, y: number) {
+    this.computeShader.setMousePos(vec2.fromValues(x,y));
+    for (let pass of this.post8Passes) pass.setMousePos(vec2.fromValues(x,y));
+  }
+
+  updateMouseCount(t: number) {
+    this.computeShader.setMouseCount(t);
   }
 
   pingpongbuffers() {
@@ -493,12 +508,18 @@ class OpenGLRenderer {
     for (let i = 0; i < this.post8Passes.length; i++){
       
       
+      
       // pingpong framebuffers for each pass
       // if this is the last pass, default is bound
-      if (i < this.post8Passes.length - 1) gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[(i + 1) % 2]);
-      else gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      
+      // if (i < this.post8Passes.length - 1) gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[(i + 1) % 2]);
+      // else gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-
+      if(i != this.shadingIdx) { 
+        continue;
+      } else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      }
 
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       gl.disable(gl.DEPTH_TEST);
@@ -514,7 +535,9 @@ class OpenGLRenderer {
       // if(this.postProcessesActive[i] != true) {
       //   this.post8Passes[0].draw();
       // } else {
-        this.post8Passes[i].draw();
+        if(i == this.shadingIdx) {
+          this.post8Passes[i].draw();
+        }
       // }
 
       // bind default

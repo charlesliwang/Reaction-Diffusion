@@ -23,7 +23,7 @@ vec3 noise_gen3D(vec3 pos) {
 // Interpolation between color and greyscale over time on left half of screen
 void main() {
 
-	vec2 size = vec2(1.5,0.0);
+	vec2 size = vec2(2.0,0.0);
  	ivec3 off = ivec3(-1,0,1);
 
 	vec4 gb1 = texture(u_input, fs_UV);
@@ -50,6 +50,6 @@ void main() {
 	vec3 col = mix(vec3(1,0,0), vec3(0,0,1), d);
 	
 	out_Col = vec4(bump.xyz, 1.0);
-	out_Col = vec4(col,1.0);
+	out_Col = vec4(vec3(d),1.0);
 	//out_Col = vec4(col,1.0);
 }

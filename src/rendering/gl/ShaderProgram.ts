@@ -1,4 +1,4 @@
-import {vec4, mat4} from 'gl-matrix';
+import {vec2, vec4, mat4} from 'gl-matrix';
 import Drawable from './Drawable';
 import Texture from './Texture';
 import {gl} from '../../globals';
@@ -34,6 +34,10 @@ class ShaderProgram {
   unifProj: WebGLUniformLocation;
   unifColor: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
+  unifWidth: WebGLUniformLocation;
+  unifHeight: WebGLUniformLocation;
+  unifMouse: WebGLUniformLocation;
+  unifMouseCount: WebGLUniformLocation;
 
 
 	gb0: WebGLUniformLocation; // The handle of a sampler2D in our shader which samples the texture drawn to the quad
@@ -62,6 +66,10 @@ class ShaderProgram {
     this.unifProj = gl.getUniformLocation(this.prog, "u_Proj");
     this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
     this.unifTime = gl.getUniformLocation(this.prog, "u_Time")
+    this.unifWidth = gl.getUniformLocation(this.prog, "u_Width")
+    this.unifHeight = gl.getUniformLocation(this.prog, "u_Height")
+    this.unifMouse = gl.getUniformLocation(this.prog, "u_Mouse")
+    this.unifMouseCount = gl.getUniformLocation(this.prog, "u_MouseCount")
 
     //this.use();
     /*this.gb0 = gl.getUniformLocation(this.prog, "u_gb0");
@@ -90,7 +98,7 @@ class ShaderProgram {
       tex.bindTex();
       gl.uniform1i(location, unit);
     } else {
-      console.log("Texture with handle name: \'" + handleName + "\' was not found");
+      //console.log("Texture with handle name: \'" + handleName + "\' was not found");
     }
   }
 
@@ -143,10 +151,40 @@ class ShaderProgram {
     }
   }
 
+  setMousePos(xy: vec2) {
+    this.use();
+    if (this.unifMouse !== -1) {
+      gl.uniform2fv(this.unifMouse, xy);
+    }
+  }
+
+  setMouseCount(t: number) {
+    this.use();
+    if (this.unifMouseCount !== -1) {
+      gl.uniform1f(this.unifMouseCount, t);
+    }
+  }
+
   setTime(t: number) {
     this.use();
     if (this.unifTime !== -1) {
       gl.uniform1f(this.unifTime, t);
+    }
+  }
+
+  
+
+  setHeight(t: number) {
+    this.use();
+    if (this.unifHeight !== -1) {
+      gl.uniform1i(this.unifHeight, t);
+    }
+  }
+
+  setWidth(t: number) {
+    this.use();
+    if (this.unifWidth !== -1) {
+      gl.uniform1i(this.unifWidth, t);
     }
   }
 

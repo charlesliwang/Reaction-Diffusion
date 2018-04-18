@@ -12,7 +12,7 @@ import Texture from './rendering/gl/Texture';
 
 // Define an object with application parameters and button callbacks
 const controls = {
-
+  shading : 'Grayscale',
 };
 
 let postProcessActive : boolean[] = [true];
@@ -30,6 +30,9 @@ let tex0: Texture;
 
 let flag = true;
 let count = 0;
+
+let mouseCount = 0;
+let numIters = 5;
 
 var timer = {
   deltaTime: 0.0,
@@ -75,7 +78,9 @@ function main() {
   // Add controls to the gui
     // Add controls to the gui
     const gui = new DAT.GUI();
+    const shading = gui.add(controls, 'shading', ['Grayscale', 'Normals']);
 
+    
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
   const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
@@ -107,6 +112,14 @@ function main() {
 
   standardDeferred.setupTexUnits(["tex_Color"]);
 
+  shading.onChange(function() {
+      if(controls.shading == 'Grayscale') {
+        renderer.shadingIdx = 0;
+      } else if(controls.shading == 'Normals') {
+        renderer.shadingIdx = 1;
+      }
+  });
+
   function tick() {
     camera.update();
     stats.begin();
@@ -126,13 +139,21 @@ function main() {
     // forward render mesh info into gbuffers
     //renderer.renderToGBuffer(camera, standardDeferred, [mesh0]);
     if(count < 10){ 
+      initShader.setTime(timer.currentTime);
+      initShader.setHeight(window.innerHeight);
+      initShader.setWidth(window.innerWidth);
       renderer.initFrameBuffer(camera, initShader, [square]); 
       flag = false;
     }
     // render from gbuffers into 32-bit color buffer
     //renderer.renderFromGBuffer(camera);
-    renderer.renderFromPrev(camera);
-    renderer.renderToPrev(camera);
+    for(let i = 0; i < numIters; i++) {
+      renderer.updateMouseCount(mouseCount--);
+      renderer.renderFromPrev(camera);
+      renderer.renderToPrev(camera);
+      renderer.clear();
+    }
+
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
     //renderer.renderPostProcessHDR();
     // apply 8-bit post and draw
@@ -147,8 +168,34 @@ function main() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
+
+    //timer.startTime = Date.now();
+    count = 0;
   }, false);
 
+  document.addEventListener('mousedown', function(event) {
+    let x = event.clientX;
+    let y = window.innerHeight - event.clientY;
+    mouseCount = 10 * numIters;
+    renderer.updateMouse(x,y);
+    renderer.updateMouseCount(mouseCount);
+  });
+  document.addEventListener('mousemove', function(event) {
+    if(mouseCount > 0) {
+    let x = event.clientX;
+    let y = window.innerHeight - event.clientY;
+    mouseCount = 10 * numIters;
+    renderer.updateMouse(x,y);
+    renderer.updateMouseCount(mouseCount);
+    }
+  });
+  document.addEventListener('mouseup', function(event) {
+    let x = event.clientX;
+    let y = window.innerHeight - event.clientY;
+    mouseCount = 0;
+    renderer.updateMouse(x,y);
+    renderer.updateMouseCount(mouseCount);
+  });
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
   camera.updateProjectionMatrix();
@@ -165,3 +212,5 @@ function setup() {
 }
 
 setup();
+
+
