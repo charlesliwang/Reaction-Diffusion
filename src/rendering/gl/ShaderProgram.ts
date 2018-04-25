@@ -38,9 +38,12 @@ class ShaderProgram {
   unifHeight: WebGLUniformLocation;
   unifMouse: WebGLUniformLocation;
   unifMouseCount: WebGLUniformLocation;
+  unifMouseRadius: WebGLUniformLocation;
   unifReactionVars: WebGLUniformLocation;
   unifReactionMode: WebGLUniformLocation;
   unifDiffuseDir: WebGLUniformLocation;
+  unifNoiseTransform: WebGLUniformLocation;
+  unifMouseDiffuseDir : WebGLUniformLocation;
 
 
 	gb0: WebGLUniformLocation; // The handle of a sampler2D in our shader which samples the texture drawn to the quad
@@ -73,10 +76,13 @@ class ShaderProgram {
     this.unifHeight = gl.getUniformLocation(this.prog, "u_Height");
     this.unifMouse = gl.getUniformLocation(this.prog, "u_Mouse");
     this.unifMouseCount = gl.getUniformLocation(this.prog, "u_MouseCount");
+    this.unifMouseDiffuseDir = gl.getUniformLocation(this.prog, "u_MouseDiffuseDir");
 
     this.unifReactionVars = gl.getUniformLocation(this.prog, "u_ReactionVars");
     this.unifReactionMode = gl.getUniformLocation(this.prog, "u_ReactionMode");
     this.unifDiffuseDir = gl.getUniformLocation(this.prog, "u_DiffuseDir");
+    this.unifMouseRadius = gl.getUniformLocation(this.prog, "u_MouseRadius");
+    this.unifNoiseTransform = gl.getUniformLocation(this.prog, "u_NoiseTransform");
 
     //this.use();
     /*this.gb0 = gl.getUniformLocation(this.prog, "u_gb0");
@@ -190,6 +196,27 @@ class ShaderProgram {
     this.use();
     if (this.unifMouseCount !== -1) {
       gl.uniform1f(this.unifMouseCount, t);
+    }
+  }
+
+  setMouseRadius(t: number) {
+    this.use();
+    if (this.unifMouseRadius !== -1) {
+      gl.uniform1f(this.unifMouseRadius, t);
+    }
+  }
+
+  setNoiseTransforms(vars: vec4) {
+    this.use();
+    if (this.unifNoiseTransform !== -1) {
+      gl.uniform4fv(this.unifNoiseTransform, vars);
+    }
+  }
+
+  setMouseDiffuseDir(vars: vec4) {
+    this.use();
+    if (this.unifMouseDiffuseDir !== -1) {
+      gl.uniform4fv(this.unifMouseDiffuseDir, vars);
     }
   }
 

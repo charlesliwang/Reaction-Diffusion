@@ -12,6 +12,9 @@ uniform sampler2D u_input;
 uniform float u_Time;
 
 
+float fade (float t) {
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0); 
+}
 
 vec3 noise_gen3D(vec3 pos) {
     float x = fract(sin(dot(vec3(pos.x,pos.y,pos.z), vec3(12.9898, 78.233, 78.156))) * 43758.5453);
@@ -48,16 +51,25 @@ void main() {
     vec3 vb = normalize(vec3(size.yx,s12-s10));
     vec4 bump = vec4( cross(va,vb), s11 );
 	
-	float d = dot(bump.xyz,normalize(vec3(1,-1,0.5)));
-	//d = d * 0.5 + 0.5;
+	float d = -dot(bump.xyz,normalize(vec3(1,-1,0.5)));
+	vec3 h = normalize(vec3(1,-1,0.5) + vec3(0,0,1));
+	float ndoth = dot(bump.xyz, h);
+	ndoth = clamp(ndoth, 0.0,1.0);
+	float spec = pow(ndoth, 7.0);
+	spec = clamp(spec * 1.5, 0.0,1.0);
+	//spec = fade(spec);
+	d = d * 0.5 + 0.5;
 	d = clamp(d,0.0,1.0);
 
 	vec3 col = mix(vec3(0,0,1), vec3(1,0,0), d);
-	
-	col = mix(vec3(0,0,0), vec3(1,0,0), gb1.x);
+	col *= clamp(gb1.x, 0.2,1.0);
+	col = mix(vec3(1,0,0),vec3(0,0,1), gb1.x);
+	col = mix(vec3(0,1,0), col, 1.0-d);
+	//col = vec3(gb1.x - gb1.y);
+	//col = mix(vec3(0,0,0), vec3(1,0,0), gb1.x);
 	float highlight = gb1.x/(gb1.y + 0.01);
 	highlight = 1.0 - clamp(highlight,0.0,1.0);
 	out_Col = vec4(bump.xyz, 1.0);
 	out_Col = vec4(col,1.0);
-	out_Col = vec4(vec3(highlight) + col, 1.0);
+	out_Col = vec4(vec3(1) * spec + col + vec3(highlight * 1.0), 1.0);
 }

@@ -12,15 +12,21 @@ import Texture from './rendering/gl/Texture';
 
 // Define an object with application parameters and button callbacks
 const controls = {
-  shading : 'Normals',
+  'Reset To Default' : resetToDefault,
+  shading : 'Grayscale',
   simulationSpeed : 3,
   feedRate: 0.055,
   killRate: 0.062,
+  mouseExplosion: true,
+  mouseRadius: 40.0,
   mode : 'Constant Feed/Kill Rates',
   diffusionDirection: false,
   diffusionX : 1.0,
   diffusionY : 1.0,
+  useMouseClick : false,
   diffusionDirScale : 0.1,
+  fNoiseScale: 1.0,
+  kNoiseScale: 1.0,
 };
 
 let postProcessActive : boolean[] = [true];
@@ -55,6 +61,10 @@ var timer = {
   },
 }
 
+function resetToDefault() {
+  controls.feedRate = 0.055;
+  controls.killRate = 0.062;
+}
 
 function loadOBJText() {
   obj0 = readTextFile('./resources/obj/wahoo.obj')
@@ -87,17 +97,24 @@ function main() {
   // Add controls to the gui
     // Add controls to the gui
     const gui = new DAT.GUI();
-    const shading = gui.add(controls, 'shading', ['Grayscale', 'Normals', 'f/k Visualization']);
+    gui.add(controls, 'Reset To Default');
+    const shading = gui.add(controls, 'shading', ['Grayscale', 'Gold Shading', 'f/k Visualization']);
     const simSpeed = gui.add(controls, 'simulationSpeed', 0, 5);
-    gui.add(controls, 'feedRate', 0.01, 0.1);
-    gui.add(controls, 'killRate', 0.01, 0.1);
+    gui.add(controls, 'feedRate', 0.01, 0.1).listen();
+    gui.add(controls, 'killRate', 0.01, 0.1).listen();
+    gui.add(controls, 'mouseExplosion', true);
+    gui.add(controls, 'mouseRadius', 0.0, 100.0).listen();
     const mode = gui.add(controls, 'mode', ['Constant Feed/Kill Rates', 'Horizontal Waves',
-    'x: feed, y: kill']);
+    'x: feed, y: kill', 'Noisy f/k']);
     gui.add(controls, 'diffusionDirection', false);
     let fDiffuse = gui.addFolder('diffusionDirectionControls');
     fDiffuse.add(controls, 'diffusionX', -1.01, 1.01).step(0.01);
     fDiffuse.add(controls, 'diffusionY', -1.01, 1.01).step(0.01);
+    let ddmouseclick = fDiffuse.add(controls, 'useMouseClick', false);
     fDiffuse.add(controls, 'diffusionDirScale', 0.0, 1.0);
+    let fkNoise = gui.addFolder('f/k Noise Transforms');
+    fkNoise.add(controls, 'fNoiseScale');
+    fkNoise.add(controls, 'kNoiseScale');
 
     
   // get canvas and webgl context
@@ -133,20 +150,20 @@ function main() {
 
   if(controls.shading == 'Grayscale') {
     renderer.shadingIdx = 0;
-  } else if(controls.shading == 'Normals') {
+  } else if(controls.shading == 'Gold Shading') {
     renderer.shadingIdx = 1;
   } else if(controls.shading == 'f/k Visualization') {
     renderer.shadingIdx = 2;
-  }
+  } 
 
   shading.onChange(function() {
       if(controls.shading == 'Grayscale') {
         renderer.shadingIdx = 0;
-      } else if(controls.shading == 'Normals') {
+      } else if(controls.shading == 'Gold Shading') {
         renderer.shadingIdx = 1;
       } else if(controls.shading == 'f/k Visualization') {
         renderer.shadingIdx = 2;
-      }
+      } 
   });
 
   mode.onChange(function() {
@@ -156,6 +173,16 @@ function main() {
       renderer.updateRendererReactionMode(1);
     } else if(controls.mode == 'x: feed, y: kill') {
       renderer.updateRendererReactionMode(2);
+    } else if(controls.mode == 'Noisy f/k') {
+      renderer.updateRendererReactionMode(3);
+    }
+  });
+
+  ddmouseclick.onChange(function() {
+    if(controls.useMouseClick) {
+      renderer.updateMouseDiffuseDir(0,0,0,1);
+    }  else {
+      renderer.updateMouseDiffuseDir(0,0,0,0);
     }
   });
 
@@ -177,6 +204,7 @@ function main() {
 
     renderer.updateReactionVars(controls.feedRate,controls.killRate,0,0);
     renderer.updateDiffuseDir(controls.diffusionX,controls.diffusionY,controls.diffusionDirScale,Number(controls.diffusionDirection));
+    renderer.updateNoiseTransforms(controls.fNoiseScale,controls.kNoiseScale,0,0);
     // if(controls.shading == 'Constant Feed/Kill Rates') {
     //   renderer.setReactionMode(0);
     // } else if(controls.shading == 'Horizontal Waves') {
@@ -223,28 +251,46 @@ function main() {
   }, false);
 
   document.addEventListener('mousedown', function(event) {
+    
     let x = event.clientX;
     let y = window.innerHeight - event.clientY;
     mouseCount = 10 * numIters;
-    renderer.updateMouse(x,y);
-    renderer.updateMouseCount(mouseCount);
+    if(controls.mouseExplosion) {
+      renderer.updateMouse(x,y);
+      renderer.updateMouseCount(mouseCount);
+      renderer.updateMouseRadius(controls.mouseRadius);
+    }
+    if(controls.useMouseClick) {
+      renderer.updateMouseDiffuseDir(x,y,1,1);
+    }
     mouseDown = true;
   });
   document.addEventListener('mousemove', function(event) {
     if(mouseDown) {
-    let x = event.clientX;
-    let y = window.innerHeight - event.clientY;
-    mouseCount = 10 * numIters;
-    renderer.updateMouse(x,y);
-    renderer.updateMouseCount(mouseCount);
+      let x = event.clientX;
+      let y = window.innerHeight - event.clientY;
+      mouseCount = 10 * numIters;
+      if(controls.mouseExplosion) {
+        renderer.updateMouse(x,y);
+        renderer.updateMouseCount(mouseCount);
+      }
+      if(controls.useMouseClick) {
+        renderer.updateMouseDiffuseDir(x,y,1,1);
+      }
     }
   });
   document.addEventListener('mouseup', function(event) {
+    if(!mouseDown) {
+      return;
+    }
     let x = event.clientX;
     let y = window.innerHeight - event.clientY;
     mouseCount = 0;
-    renderer.updateMouse(x,y);
-    renderer.updateMouseCount(mouseCount);
+    if(controls.mouseExplosion) {
+      renderer.updateMouse(x,y);
+      renderer.updateMouseCount(mouseCount);
+    }
+
     mouseDown = false;
   });
   renderer.setSize(window.innerWidth, window.innerHeight);

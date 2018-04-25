@@ -87,7 +87,7 @@ class OpenGLRenderer {
     // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/passthroughPost-frag.glsl'))));
     
     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/rd-grayscale-frag.glsl'))));
-    this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/basic-normals-frag.glsl'))));
+    this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/gold-frag.glsl'))));
     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/rd-fk-vis-frag.glsl'))));
     
     // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/vaporwave-frag.glsl'))));
@@ -305,6 +305,10 @@ class OpenGLRenderer {
     this.computeShader.setMouseCount(t);
   }
 
+  updateMouseRadius(t: number) {
+    this.computeShader.setMouseRadius(t);
+  }
+
   updateReactionVars(x : number, y : number, z : number, w: number) {
     this.computeShader.setReactionVars(vec4.fromValues(x,y,z,w));
     for (let pass of this.post8Passes) pass.setReactionVars(vec4.fromValues(x,y,z,w));
@@ -319,6 +323,16 @@ class OpenGLRenderer {
   updateDiffuseDir(x : number, y : number, z : number, w: number) {
     this.computeShader.setDiffuseDir(vec4.fromValues(x,y,z,w));
     for (let pass of this.post8Passes) pass.setDiffuseDir(vec4.fromValues(x,y,z,w));
+  }
+
+  updateNoiseTransforms(x : number, y : number, z : number, w: number) {
+    this.computeShader.setNoiseTransforms(vec4.fromValues(x,y,z,w));
+    for (let pass of this.post8Passes) pass.setNoiseTransforms(vec4.fromValues(x,y,z,w));
+  }
+
+  updateMouseDiffuseDir(x : number, y : number, z : number, w: number) {
+    this.computeShader.setMouseDiffuseDir(vec4.fromValues(x,y,z,w));
+    for (let pass of this.post8Passes) pass.setMouseDiffuseDir(vec4.fromValues(x,y,z,w));
   }
 
   pingpongbuffers() {
