@@ -88,6 +88,7 @@ class OpenGLRenderer {
     
     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/rd-grayscale-frag.glsl'))));
     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/basic-normals-frag.glsl'))));
+    this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/rd-fk-vis-frag.glsl'))));
     
     // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/vaporwave-frag.glsl'))));
     // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/paint-frag.glsl'))));
@@ -289,6 +290,7 @@ class OpenGLRenderer {
 
   updateTime(deltaTime: number, currentTime: number) {
     this.deferredShader.setTime(currentTime);
+    this.computeShader.setTime(currentTime);
     for (let pass of this.post8Passes) pass.setTime(currentTime);
     for (let pass of this.post32Passes) pass.setTime(currentTime);
     this.currentTime = currentTime;
@@ -303,6 +305,22 @@ class OpenGLRenderer {
     this.computeShader.setMouseCount(t);
   }
 
+  updateReactionVars(x : number, y : number, z : number, w: number) {
+    this.computeShader.setReactionVars(vec4.fromValues(x,y,z,w));
+    for (let pass of this.post8Passes) pass.setReactionVars(vec4.fromValues(x,y,z,w));
+  }
+
+  updateRendererReactionMode(mode : number) {
+    console.log(mode);
+    this.computeShader.setReactionMode(mode);
+    for (let pass of this.post8Passes) pass.setReactionMode(mode);
+  }
+
+  updateDiffuseDir(x : number, y : number, z : number, w: number) {
+    this.computeShader.setDiffuseDir(vec4.fromValues(x,y,z,w));
+    for (let pass of this.post8Passes) pass.setDiffuseDir(vec4.fromValues(x,y,z,w));
+  }
+
   pingpongbuffers() {
     let gb0 = this.gbTargets[0];
     var same2 = gb0 == this.gbTargets[0];
@@ -312,7 +330,8 @@ class OpenGLRenderer {
   }
 
   clear() {
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.DEPTH_BUFFER_BIT);
   }
 
 
@@ -410,10 +429,6 @@ class OpenGLRenderer {
     gl.enable(gl.BLEND);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    let view = camera.viewMatrix;
-    let proj = camera.projectionMatrix;
-    this.deferredShader.setViewMatrix(view);
-    this.deferredShader.setProjMatrix(proj);
 
     gl.activeTexture(gl.TEXTURE0 + 1);
     gl.bindTexture(gl.TEXTURE_2D, this.nextTarget);
@@ -526,8 +541,8 @@ class OpenGLRenderer {
       gl.enable(gl.BLEND);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this.post8Targets[(i) % 2]);
+      // gl.activeTexture(gl.TEXTURE0);
+      // gl.bindTexture(gl.TEXTURE_2D, this.post8Targets[(i) % 2]);
 
       gl.activeTexture(gl.TEXTURE1 + 1);
       gl.bindTexture(gl.TEXTURE_2D, this.nextTarget);

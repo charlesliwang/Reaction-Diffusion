@@ -29,21 +29,24 @@ void main() {
 	float k_norm = 0.0;
 	float feed_norm = 0.0;
 
-	// if(u_ReactionMode == 1) {
-	// 	feed_norm = mod(fs_UV.x + mod(u_Time / 30.0,120.0)/(120.0),1.0 );
-	// 	feed = mix(0.03,0.07, feed_norm);
-	// 	k_norm = mod(fs_UV.x + mod(u_Time / 10.0,120.0)/(120.0),1.0 );
-	// 	k = mix(0.05,0.07, k_norm);
-	// } else if( u_ReactionMode == 2) {
-	// 	float t_warpx = sin(PI * mod(u_Time / 30.0, 120.0) / 120.0);
-	// 	feed_norm = mod(fs_UV.x + t_warpx,1.0 );
-	// 	feed_norm = mod(fs_UV.x + mod(u_Time / 30.0,120.0)/(120.0),1.0 );
-	// 	feed = mix(0.03,0.07, feed_norm);
-	// 	float t_warpy = sin(PI * mod(u_Time / 10.0, 120.0) / 120.0);
-	// 	k_norm = mod(fs_UV.y + t_warpy,1.0 );
-	// 	k_norm = mod(fs_UV.y + mod(u_Time / 10.0,120.0)/(120.0),1.0 );
-	// 	k = mix(0.05,0.07, k_norm);
-	// }
+	if(u_ReactionMode == 0) {
+		feed_norm = u_ReactionVars.x/0.1;
+		k_norm = u_ReactionVars.y/0.1;
+	} else if(u_ReactionMode == 1) {
+		feed_norm = mod(fs_UV.x + mod(u_Time / 30.0,120.0)/(120.0),1.0 );
+		feed = mix(0.03,0.07, feed_norm);
+		k_norm = mod(fs_UV.x + mod(u_Time / 10.0,120.0)/(120.0),1.0 );
+		k = mix(0.05,0.07, k_norm);
+	} else if( u_ReactionMode == 2) {
+		float t_warpx = sin(PI * mod(u_Time / 30.0, 120.0) / 120.0);
+		feed_norm = mod(fs_UV.x + t_warpx,1.0 );
+		feed_norm = mod(fs_UV.x + mod(u_Time / 30.0,120.0)/(120.0),1.0 );
+		feed = mix(0.03,0.07, feed_norm);
+		float t_warpy = sin(PI * mod(u_Time / 10.0, 120.0) / 120.0);
+		k_norm = mod(fs_UV.y + t_warpy,1.0 );
+		k_norm = mod(fs_UV.y + mod(u_Time / 10.0,120.0)/(120.0),1.0 );
+		k = mix(0.05,0.07, k_norm);
+	}
 
 	vec4 colFeed = mix(vec4(1.0,0.0,0.0,1.0),vec4(0.0,0.0,1.0,1.0), feed_norm);
 	vec4 colKill = mix(vec4(0.0,1.0,0.0,1.0),vec4(0.0,0.0,1.0,1.0), k_norm);
@@ -55,6 +58,6 @@ void main() {
 	float c = (gb1.x - gb1.y);
 	c = clamp(c,0.0,1.0);
 
-	out_Col = vec4(vec3(c),1.0);
+	out_Col = vec4(c*col.xyz,1.0);
 	//out_Col = vec4(col,1.0);
 }

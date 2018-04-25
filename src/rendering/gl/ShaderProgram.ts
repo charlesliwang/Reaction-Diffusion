@@ -38,6 +38,9 @@ class ShaderProgram {
   unifHeight: WebGLUniformLocation;
   unifMouse: WebGLUniformLocation;
   unifMouseCount: WebGLUniformLocation;
+  unifReactionVars: WebGLUniformLocation;
+  unifReactionMode: WebGLUniformLocation;
+  unifDiffuseDir: WebGLUniformLocation;
 
 
 	gb0: WebGLUniformLocation; // The handle of a sampler2D in our shader which samples the texture drawn to the quad
@@ -58,18 +61,22 @@ class ShaderProgram {
     this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
     this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
-    this.attrUV = gl.getAttribLocation(this.prog, "vs_UV")
+    this.attrUV = gl.getAttribLocation(this.prog, "vs_UV");
     this.unifModel = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj = gl.getUniformLocation(this.prog, "u_ViewProj");
     this.unifView = gl.getUniformLocation(this.prog, "u_View");
     this.unifProj = gl.getUniformLocation(this.prog, "u_Proj");
     this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
-    this.unifTime = gl.getUniformLocation(this.prog, "u_Time")
-    this.unifWidth = gl.getUniformLocation(this.prog, "u_Width")
-    this.unifHeight = gl.getUniformLocation(this.prog, "u_Height")
-    this.unifMouse = gl.getUniformLocation(this.prog, "u_Mouse")
-    this.unifMouseCount = gl.getUniformLocation(this.prog, "u_MouseCount")
+    this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
+    this.unifWidth = gl.getUniformLocation(this.prog, "u_Width");
+    this.unifHeight = gl.getUniformLocation(this.prog, "u_Height");
+    this.unifMouse = gl.getUniformLocation(this.prog, "u_Mouse");
+    this.unifMouseCount = gl.getUniformLocation(this.prog, "u_MouseCount");
+
+    this.unifReactionVars = gl.getUniformLocation(this.prog, "u_ReactionVars");
+    this.unifReactionMode = gl.getUniformLocation(this.prog, "u_ReactionMode");
+    this.unifDiffuseDir = gl.getUniformLocation(this.prog, "u_DiffuseDir");
 
     //this.use();
     /*this.gb0 = gl.getUniformLocation(this.prog, "u_gb0");
@@ -148,6 +155,27 @@ class ShaderProgram {
     this.use();
     if (this.unifColor !== -1) {
       gl.uniform4fv(this.unifColor, color);
+    }
+  }
+
+  setReactionVars(vars: vec4) {
+    this.use();
+    if (this.unifReactionVars !== -1) {
+      gl.uniform4fv(this.unifReactionVars, vars);
+    }
+  }
+
+  setReactionMode(mode: number) {
+    this.use();
+    if (this.unifReactionMode !== -1) {
+      gl.uniform1i(this.unifReactionMode, mode);
+    }
+  }
+
+  setDiffuseDir(vars: vec4) {
+    this.use();
+    if (this.unifDiffuseDir !== -1) {
+      gl.uniform4fv(this.unifDiffuseDir, vars);
     }
   }
 

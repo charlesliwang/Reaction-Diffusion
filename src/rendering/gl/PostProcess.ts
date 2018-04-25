@@ -12,6 +12,7 @@ class PostProcess extends ShaderProgram {
 	// gb1: WebGLUniformLocation; // The handle of a sampler2D in our shader which samples the texture drawn to the quad
 	// gb2: WebGLUniformLocation; // The handle of a sampler2D in our shader which samples the texture drawn to the quad
 	input : WebGLUniformLocation;
+	
 	name: string;
 
 	constructor(fragProg: Shader, tag: string = "default") {

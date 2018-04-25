@@ -20,7 +20,7 @@ void main() {
 	vec3 lightdir = vec3(1,1,0);
 	lightdir = normalize(lightdir);
 	vec4 input_u = texture(u_input, fs_UV);
-	input_u = texelFetch(u_input, ivec2(gl_FragCoord.xy), 0);
+	//input_u = texelFetch(u_input, ivec2(gl_FragCoord.xy), 0);
 
 	out_Col = vec4((input_u.xyz), 1.0);
 }

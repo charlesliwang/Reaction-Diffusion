@@ -23,7 +23,7 @@ vec3 noise_gen3D(vec3 pos) {
 // Interpolation between color and greyscale over time on left half of screen
 void main() {
 
-	vec2 size = vec2(2.0,0.0);
+	vec2 size = vec2(4.0,0.0);
  	ivec3 off = ivec3(-1,0,1);
 
 	vec4 gb1 = texture(u_input, fs_UV);
@@ -40,16 +40,24 @@ void main() {
 	float s21 = s21xy.x - s21xy.y;
 	float s10 = s10xy.x - s10xy.y;
 	float s12 = s12xy.x - s12xy.y;
+	s01 = clamp(s01,0.0,1.0);
+	s21 = clamp(s21,0.0,1.0);
+	s10 = clamp(s10,0.0,1.0);
+	s12 = clamp(s12,0.0,1.0);
     vec3 va = normalize(vec3(size.xy,s21-s01));
     vec3 vb = normalize(vec3(size.yx,s12-s10));
     vec4 bump = vec4( cross(va,vb), s11 );
 	
 	float d = dot(bump.xyz,normalize(vec3(1,-1,0.5)));
+	//d = d * 0.5 + 0.5;
 	d = clamp(d,0.0,1.0);
 
-	vec3 col = mix(vec3(1,0,0), vec3(0,0,1), d);
+	vec3 col = mix(vec3(0,0,1), vec3(1,0,0), d);
 	
+	col = mix(vec3(0,0,0), vec3(1,0,0), gb1.x);
+	float highlight = gb1.x/(gb1.y + 0.01);
+	highlight = 1.0 - clamp(highlight,0.0,1.0);
 	out_Col = vec4(bump.xyz, 1.0);
 	out_Col = vec4(col,1.0);
-	//out_Col = vec4(col,1.0);
+	out_Col = vec4(vec3(highlight) + col, 1.0);
 }

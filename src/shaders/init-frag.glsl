@@ -62,9 +62,9 @@ void main() {
 
     vec2 idx = vec2(floor(fs_UV.x * 10.0)/10.0, floor(fs_UV.y * 10.0)/10.0);
 
-    // if(distance(fs_UV,idx) < 0.04) {
-    //     gb0[1] = 1.0;
-    // }
+    if(distance(fs_UV,idx) < 0.04) {
+        gb0[1] = 1.0;
+    }
 
     if(int(gl_FragCoord.x) == 0 || int(gl_FragCoord.y) == 0 || int(frag_coord.x) > (u_Width - 3) || int(frag_coord.y) > (u_Height - 3)) {
 		gb0[1] = 0.0;

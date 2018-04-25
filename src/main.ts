@@ -12,8 +12,15 @@ import Texture from './rendering/gl/Texture';
 
 // Define an object with application parameters and button callbacks
 const controls = {
-  shading : 'Grayscale',
+  shading : 'Normals',
   simulationSpeed : 3,
+  feedRate: 0.055,
+  killRate: 0.062,
+  mode : 'Constant Feed/Kill Rates',
+  diffusionDirection: false,
+  diffusionX : 1.0,
+  diffusionY : 1.0,
+  diffusionDirScale : 0.1,
 };
 
 let postProcessActive : boolean[] = [true];
@@ -33,6 +40,7 @@ let flag = true;
 let count = 0;
 
 let mouseCount = 0;
+let mouseDown = false;
 let numIters = 5;
 
 var timer = {
@@ -79,8 +87,17 @@ function main() {
   // Add controls to the gui
     // Add controls to the gui
     const gui = new DAT.GUI();
-    const shading = gui.add(controls, 'shading', ['Grayscale', 'Normals']);
+    const shading = gui.add(controls, 'shading', ['Grayscale', 'Normals', 'f/k Visualization']);
     const simSpeed = gui.add(controls, 'simulationSpeed', 0, 5);
+    gui.add(controls, 'feedRate', 0.01, 0.1);
+    gui.add(controls, 'killRate', 0.01, 0.1);
+    const mode = gui.add(controls, 'mode', ['Constant Feed/Kill Rates', 'Horizontal Waves',
+    'x: feed, y: kill']);
+    gui.add(controls, 'diffusionDirection', false);
+    let fDiffuse = gui.addFolder('diffusionDirectionControls');
+    fDiffuse.add(controls, 'diffusionX', -1.01, 1.01).step(0.01);
+    fDiffuse.add(controls, 'diffusionY', -1.01, 1.01).step(0.01);
+    fDiffuse.add(controls, 'diffusionDirScale', 0.0, 1.0);
 
     
   // get canvas and webgl context
@@ -114,12 +131,32 @@ function main() {
 
   standardDeferred.setupTexUnits(["tex_Color"]);
 
+  if(controls.shading == 'Grayscale') {
+    renderer.shadingIdx = 0;
+  } else if(controls.shading == 'Normals') {
+    renderer.shadingIdx = 1;
+  } else if(controls.shading == 'f/k Visualization') {
+    renderer.shadingIdx = 2;
+  }
+
   shading.onChange(function() {
       if(controls.shading == 'Grayscale') {
         renderer.shadingIdx = 0;
       } else if(controls.shading == 'Normals') {
         renderer.shadingIdx = 1;
+      } else if(controls.shading == 'f/k Visualization') {
+        renderer.shadingIdx = 2;
       }
+  });
+
+  mode.onChange(function() {
+    if(controls.mode == 'Constant Feed/Kill Rates') {
+      renderer.updateRendererReactionMode(0);
+    } else if(controls.mode == 'Horizontal Waves') {
+      renderer.updateRendererReactionMode(1);
+    } else if(controls.mode == 'x: feed, y: kill') {
+      renderer.updateRendererReactionMode(2);
+    }
   });
 
   
@@ -138,6 +175,13 @@ function main() {
     renderer.clearGB(); // modified
     count++;
 
+    renderer.updateReactionVars(controls.feedRate,controls.killRate,0,0);
+    renderer.updateDiffuseDir(controls.diffusionX,controls.diffusionY,controls.diffusionDirScale,Number(controls.diffusionDirection));
+    // if(controls.shading == 'Constant Feed/Kill Rates') {
+    //   renderer.setReactionMode(0);
+    // } else if(controls.shading == 'Horizontal Waves') {
+    //   renderer.setReactionMode(1);
+    // }
 
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
@@ -152,6 +196,7 @@ function main() {
     // render from gbuffers into 32-bit color buffer
     //renderer.renderFromGBuffer(camera);
     for(let i = 0; i < controls.simulationSpeed; i++) {
+      renderer.updateTime(timer.deltaTime,count);
       renderer.updateMouseCount(mouseCount--);
       renderer.renderFromPrev(camera);
       renderer.renderToPrev(camera);
@@ -183,9 +228,10 @@ function main() {
     mouseCount = 10 * numIters;
     renderer.updateMouse(x,y);
     renderer.updateMouseCount(mouseCount);
+    mouseDown = true;
   });
   document.addEventListener('mousemove', function(event) {
-    if(mouseCount > 0) {
+    if(mouseDown) {
     let x = event.clientX;
     let y = window.innerHeight - event.clientY;
     mouseCount = 10 * numIters;
@@ -199,6 +245,7 @@ function main() {
     mouseCount = 0;
     renderer.updateMouse(x,y);
     renderer.updateMouseCount(mouseCount);
+    mouseDown = false;
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
